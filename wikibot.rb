@@ -4,7 +4,7 @@ require 'byebug'
 
 class Article
   attr_reader :url
-  
+
   def initialize response
     lines = response.split("\n")
     @url = lines.pop
@@ -16,36 +16,36 @@ class Article
   end
 
   def summary
-    content = @doc.css('#mw-content-text>p').first 
+    content = @doc.css('#mw-content-text>p').first
     return content.text unless content.nil?
     ""
   end
 
   def image
-    img = @doc.css('.infobox img').first 
+    img = @doc.css('.infobox img').first
     return img.attr('src') unless img.nil?
     ""
   end
-  
+
   def random_link
     random_link = links.sample
     random_link
   end
-  
-  def links 
+
+  def links
     link_nodes = @doc.css('#bodyContent a').select{|a| validate_link a}
     link_nodes.map{|a| format_link a.attr('href')}.uniq
   end
-  
-  private 
-  
+
+  private
+
     def validate_link a
       href = a.attr('href')
-      href.start_with?('/wiki/') && 
+      href.start_with?('/wiki/') &&
       !href.include?(':') &&
       !href.include?('Main_Page')
     end
-    
+
     def format_link link
       link.sub(/^\/wiki\//, '').sub(/\#.*/, '').sub('(', '%28').sub(')', '%29')
     end
@@ -80,7 +80,7 @@ class HtmlRenderer
     content = ERB.new(template).result(binding)
     File.write(file, content)
     `open #{file}`
-  end  
+  end
   def template
 %{
 <!DOCTYPE html>
@@ -88,13 +88,49 @@ class HtmlRenderer
   <head>
     <meta charset="utf-8">
     <title>Randomizer</title>
+    <link href="https://fonts.googleapis.com/css?family=Lora" rel="stylesheet">
+    <style>
+      body {
+        font-family: Lora,serif;
+        line-height: 1.6;
+        background: #e2e2e2;
+        padding: 0;
+        margin: 0;
+      }
+      main {
+        background: #FFF;
+        padding: 20px;
+      }
+      a {
+        color: #000;
+        text-decoration: none;
+        padding-bottom: .3em;
+      }
+      a:hover {
+        color: #5d5d5d;
+        border-bottom: 1px solid #5d5d5d;
+      }
+      hr {
+        border: none;
+        border-bottom: 1px solid #e2e2e2;
+      }
+      @media (min-width: 700px) {
+        main {
+          max-width: 700px;
+          margin: 0 auto;
+        }
+      }
+    </style>
   </head>
   <body>
-    <% @articles.each do |article| %>
-      <h3><a href="<%= article.url %>"><%= article.title %></a></h3>
-      <p><%= article.summary %></p>
-      <img src="https:<%= article.image %>"></img>
-    <% end %>
+    <main>
+      <% @articles.each do |article| %>
+        <h1><a href="<%= article.url %>"><%= article.title %></a></h1>
+        <p><%= article.summary %></p>
+        <img src="https:<%= article.image %>"></img>
+        <hr />
+      <% end %>
+    </main>
   </body>
 </html>
 }
@@ -103,19 +139,19 @@ end
 class Crawler
   WIKI_ROOT = "https://en.wikipedia.org/wiki/"
   WIKI_RANDOM = "#{WIKI_ROOT}Special:Random"
-  
+
   def initialize options
     @options = options
     @iterations = options[:iterations]
     @renderer = options[:renderer]
     @articles = []
   end
-  
+
   def run url=nil
     print '.'
-    response = `curl -Ls -w %{url_effective} #{url || WIKI_RANDOM}`    
+    response = `curl -Ls -w %{url_effective} #{url || WIKI_RANDOM}`
     article = Article.new response
-    
+
     @articles << article
     if keep_going?
       if @options[:rlyrandom]; run
@@ -123,7 +159,7 @@ class Crawler
       end
     end
   end
-  
+
   private
     def keep_going?
       @iterations = @iterations - 1 and return true if @iterations > 1
@@ -131,7 +167,7 @@ class Crawler
       finish
       false
     end
-    
+
     def finish
       @renderer.new(@articles).render
     end
