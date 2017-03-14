@@ -17,6 +17,7 @@ class Article
 
   def summary
     content = @doc.css('#mw-content-text>p').first
+    content.xpath("./*[contains(@class, 'reference')]").remove
     return content.text unless content.nil?
     ""
   end
