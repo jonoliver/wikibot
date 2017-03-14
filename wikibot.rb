@@ -52,11 +52,22 @@ class Article
 end
 
 class ConsoleRenderer
-  def self.render_article article
+  def initialize articles
+    @articles = articles
+  end
+
+  def render
+    2.times{ puts "" }
+    @articles.each{|article| render_article article }
+  end
+
+  private
+
+  def render_article article
     puts article.title.upcase
     puts article.summary
     puts article.url
-    puts article.image
+    # puts article.image
     puts ''
   end
 end
@@ -65,7 +76,7 @@ class HtmlRenderer
     @articles = articles
   end
   def render
-    file = 'hi_7.html'
+    file = 'index.html'
     content = ERB.new(template).result(binding)
     File.write(file, content)
     `open #{file}`
@@ -96,6 +107,7 @@ class Crawler
   def initialize options
     @options = options
     @iterations = options[:iterations]
+    @renderer = options[:renderer]
     @articles = []
   end
   
@@ -103,8 +115,6 @@ class Crawler
     print '.'
     response = `curl -Ls -w %{url_effective} #{url || WIKI_RANDOM}`    
     article = Article.new response
-    
-    # ConsoleRenderer.render_article article
     
     @articles << article
     if keep_going?
@@ -123,8 +133,7 @@ class Crawler
     end
     
     def finish
-      html_render = HtmlRenderer.new @articles
-      html_render.render      
+      @renderer.new(@articles).render
     end
 end
 
@@ -132,7 +141,8 @@ end
 require 'optparse'
 
 options = {
-  iterations: 20
+  iterations: 20,
+  renderer: ConsoleRenderer
 }
 OptionParser.new do |opts|
   opts.banner = "Usage: wikibot.rb [options] [url]"
@@ -142,6 +152,9 @@ OptionParser.new do |opts|
   end
   opts.on("-t N", "--total N", Integer, "Return N articles") do |v|
     options[:iterations] = v
+  end
+  opts.on("-b", "--browse", "Open results in browser (prints to console by default)") do |v|
+    options[:renderer] = HtmlRenderer
   end
   # opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
   #   options[:verbose] = v
