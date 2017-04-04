@@ -101,20 +101,24 @@ class HtmlRenderer
       }
       main {
         background: #FFF;
-        padding: 20px;
+      }
+      article {
+      }
+      article section {
+        margin: 0 20px;
+      }
+      h1 {
+        margin: 0;
       }
       a {
-        color: #000;
+        display: block;
+        background: #5d5d5d;
+        color: #FFF;
+        padding: 10px 20px;
         text-decoration: none;
-        padding-bottom: .3em;
       }
       a:hover {
-        color: #5d5d5d;
-        border-bottom: 1px solid #5d5d5d;
-      }
-      hr {
-        border: none;
-        border-bottom: 1px solid #e2e2e2;
+        background: #868686;
       }
       @media (min-width: 700px) {
         main {
@@ -127,10 +131,13 @@ class HtmlRenderer
   <body>
     <main>
       <% @articles.each do |article| %>
-        <h1><a href="<%= article.url %>"><%= article.title %></a></h1>
-        <p><%= article.summary %></p>
-        <img src="https:<%= article.image %>"></img>
-        <hr />
+        <article>
+          <h1><a href="<%= article.url %>"><%= article.title %></a></h1>
+          <section>
+            <p><%= article.summary %></p>
+            <img src="https:<%= article.image %>"></img>
+          </section>
+        </article>
       <% end %>
     </main>
   </body>
